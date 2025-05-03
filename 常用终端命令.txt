@@ -1,0 +1,10 @@
+整个环境下的安装包都保存到requirements.txt中
+pip freeze > requirements.txt
+
+用 conda list --export（推荐用于 Conda 环境）
+这是 Conda 官方推荐的导出依赖方式：
+conda list --export > requirements.txt
+
+ Conda 导出的环境文件，可以用于在其他设备或同事电脑上还原完整 Conda 环境。
+conda create --name myenv --file environment.txt
+这个命令会根据你提供的 .txt 文件（你这段内容）创建一个名为 myenv 的新环境，并安装所有指定版本的包。

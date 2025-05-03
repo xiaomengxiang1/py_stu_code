@@ -1,0 +1,11 @@
+# 忽略 Python项目的临时文件
+__pycache__/
+
+# 可执行文件
+*.exe
+
+# VSCode 配置
+.vscode/
+
+# 音频
+*.wav
