@@ -1,3 +1,6 @@
+
+# 目前没什么用
+
 import os
 import soundfile as sf
 import sounddevice as sd
@@ -53,4 +56,3 @@ if __name__ == "__main__":
     tts.speak("博士，今天要做什么任务呢？")
 
 
-# 目前没什么用

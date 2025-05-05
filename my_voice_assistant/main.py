@@ -15,6 +15,8 @@ from vad_recorder import VADRecorder  # 自定义VADRecorder模块，用于VAD�
 from openai import OpenAI
 import config
 
+import threading
+
 # === LLM接口配置 ===
 # DeepSeek接口地址和API Key（可通过环境变量配置）
 deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", config.deepseek_api_key)
@@ -63,31 +65,7 @@ def dp_chat_ollama(message: str):
     conversation_history.append({"role": "assistant", "content": assistant_response})
     return assistant_response
 
-# 废弃版本
-# def dp_chat_deepseek(message: str):
-#     """
-#     调用DeepSeek LLM接口生成回复。
-#     :param message: 用户输入文本
-#     :return: LLM生成的回复文本
-#     """
-#     global conversation_history
-#     t1 = time.time()
-#     conversation_history.append({"role": "user", "content": message})
-#     headers = {"Authorization": f"Bearer {deepseek_api_key}", "Content-Type": "application/json"}
-#     payload = {"messages": conversation_history}
-#     # 发送请求到DeepSeek服务
-#     response = requests.post(deepseek_api_url, headers=headers, json=payload)
-#     if response.status_code == 200:
-#         resp_json = response.json()
-#         assistant_response = resp_json.get("choices", [])[0].get("message", {}).get("content", "")
-#     else:
-#         print(f"DeepSeek API 错误: {response.status_code}")
-#         assistant_response = "对不起，DeepSeek 服务暂不可用。"
-#     print(f"DeepSeek响应时间: {time.time() - t1:.2f} 秒")
-#     conversation_history.append({"role": "assistant", "content": assistant_response})
-#     return assistant_response
-
-
+# 直接流式输出不和打印同步
 def dp_chat_deepseek(message: str, stream=True):
     """
     使用 DeepSeek 接口进行聊天，支持流式输出。
@@ -126,6 +104,8 @@ def dp_chat_deepseek(message: str, stream=True):
     conversation_history.append({"role": "assistant", "content": reply})
     return reply
 
+
+
 def dp_chat(message: str, use_deepseek=False, stream=True):
     """
     根据use_deepseek标志选择LLM，然后调用TTS播放回复。
@@ -140,6 +120,7 @@ def dp_chat(message: str, use_deepseek=False, stream=True):
     else:
         # Ollama默认非流式，可扩展为流式
         reply = dp_chat_ollama(message)
+
     # 调用TTS引擎朗读回复
     tts_engine.speak(reply)
     return reply
@@ -185,7 +166,10 @@ def continuous_conversation(model, recorder, use_deepseek=False, sleep_time=30):
         print("User:", text)
         # LLM对话并TTS播放
         response = dp_chat(text, use_deepseek)
-        # print("Assistant:", response)
+        # print("AI:", end='', flush=True)
+        # for i in response:
+        #     print(i, end='', flush=True)
+        #     time.sleep(0.2)
 
 
 def save_conversation_history():
