@@ -1,0 +1,75 @@
+--------------------JSON的值---------------------
+
+// JSON 值可以是：
+        // 数字（整数或浮点数）
+        // 字符串（在双引号中）
+        // 逻辑值（true 或 false）
+        // 数组（在中括号中）
+        // 对象（在大括号中）
+        // null
+
+{
+    "sites": [
+        { "name":"菜鸟教程" , "url":"www.runoob.com" }, 
+        { "name":"google" , "url":"www.google.com" }, 
+        { "name":"微博" , "url":"www.weibo.com" }
+    ]
+}
+在上面的例子中，对象 sites 是包含三个对象的数组。每个对象代表一条关于某个网站（name、url）的记录。
+
+--------------------JSON的对象---------------------
+
+{ "name":"runoob", "alexa":10000, "site":null }
+
+JSON 对象使用在大括号 {...} 中书写。
+对象可以包含多个 key/value（键/值）对。
+key 必须是字符串，value 可以是合法的 JSON 数据类型（字符串, 数字, 对象, 数组, 布尔值或 null）。
+key 和 value 中使用冒号 : 分割。
+每个 key/value 对使用逗号 , 分割。
+
+-----------------------访问对象值-----------------------------
+你可以使用点号 . 来访问对象的值：
+实例
+var myObj, x;
+myObj = { "name":"runoob", "alexa":10000, "site":null };
+x = myObj.name;
+
+你也可以使用中括号（[]）来访问对象的值：
+var myObj, x;
+myObj = { "name":"runoob", "alexa":10000, "site":null };
+x = myObj["name"];
+
+----------------------------JSON数组------------------------
+中括号 [] 保存的数组是值（value）的有序集合。
+一个数组以左中括号 [ 开始， 右中括号 ] 结束，值之间使用逗号 , 分隔.
+
+{
+"name":"网站",
+"num":3,
+"sites":[ "Google", "Runoob", "Taobao" ]
+}
+用索引进值访问数组
+x = myObj.sites[0];
+
+------------------------------python和json的相互转换----------------------
+Python 编码为 JSON 类型转换对应表：
+Python	                                    JSON
+dict	                                    object
+list, tuple	                                array
+str	                                        string
+int, float, int- & float-derived Enums	    number
+True	                                    true
+False	                                    false
+None	                                    null
+
+
+JSON 解码为 Python 类型转换对应表：
+JSON	                                    Python
+object	                                    dict
+array	                                    list
+string	                                    str
+number (int)	                            int
+number (real)	                            float
+true	                                    True
+false	                                    False
+null	                                    None

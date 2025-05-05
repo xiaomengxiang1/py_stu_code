@@ -9,3 +9,14 @@ __pycache__/
 
 # 音频
 *.wav
+
+# 忽略整个 db 文件夹（包括其中的二进制文件）
+anaconda_projects/db/
+
+.ipynb_checkpoints/
+
+# 模型文件
+iic/
+
+# 对话日志
+conversation_logs/
