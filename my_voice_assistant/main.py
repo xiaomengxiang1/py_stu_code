@@ -15,7 +15,6 @@ from vad_recorder import VADRecorder  # 自定义VADRecorder模块，用于VAD�
 from openai import OpenAI
 import config
 
-import threading
 
 # === LLM接口配置 ===
 # DeepSeek接口地址和API Key（可通过环境变量配置）
@@ -122,7 +121,7 @@ def dp_chat(message: str, use_deepseek=False, stream=True):
         reply = dp_chat_ollama(message)
 
     # 调用TTS引擎朗读回复
-    tts_engine.speak(reply)
+    tts_engine.speak(reply, emotion=config.emotion)
     return reply
 
 
@@ -155,7 +154,8 @@ def continuous_conversation(model, recorder, use_deepseek=False, sleep_time=30):
             continue
         # 超时退出检查
         if time.time() - start > sleep_time:
-            play_audio("E:/vscode_project/py_stu_code/my_voice_assistant/睡眠音频/sleep.wav")
+            #播放退出音频
+            play_audio(config.sleep_wav_path)
             break
         # 语音识别
         text = transcribe_audio(f"E:/vscode_project/py_stu_code/{recorded}", model)
