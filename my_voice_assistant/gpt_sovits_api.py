@@ -79,7 +79,6 @@ class SoVITS:
         wav_file = self.synthesize(text, emotion, output_file)
         print(f"TTS耗时：{time.time() - start:.2f}秒")
         self.play(wav_file)
-        #待添加第二个线程 使文字和语音可以同时播放
 
 if __name__ == "__main__":
     tts = SoVITS()

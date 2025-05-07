@@ -20,3 +20,6 @@ iic/
 
 # 对话日志
 conversation_logs/
+
+#live2d模型文件
+model/
