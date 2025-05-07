@@ -16,10 +16,15 @@ emotion_map = {
     "愉悦": "E:/vscode_project/py_stu_code/my_voice_assistant/参考音频/祝你生日快乐老师，为了纪念这个时刻.wav"
 }
 
+# 人物说话情感
+emotion = "愉悦"
+
+# 默认参考音频语种
+prompt_language = "中文"
+
+#睡眠音频
 sleep_wav_path = "E:/vscode_project/py_stu_code/my_voice_assistant/睡眠音频/sleep.wav"
 
-#选择情感
-emotion = "愉悦"
 
 # deepseek的api_key
 deepseek_api_key = "sk-d25c21624d834a709267dbc0d320e7a9"

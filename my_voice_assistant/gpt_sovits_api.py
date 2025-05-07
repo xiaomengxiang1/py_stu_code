@@ -20,7 +20,7 @@ class SoVITS:
         """从参考音频路径提取提示文本"""
         return os.path.splitext(os.path.basename(path))[0]
 
-    def _change_reference_audio(self, emotion, language="日文"):
+    def _change_reference_audio(self, emotion, language="中文"):
         """切换参考音频"""
         ref_path = self.emotion_map.get(emotion)
         if not ref_path or not os.path.exists(ref_path):
@@ -35,7 +35,7 @@ class SoVITS:
 
     def synthesize(self, text, emotion, output_file="output.wav"):
         """合成音频到文件，不播放"""
-        self._change_reference_audio(emotion)
+        self._change_reference_audio(emotion, language=config.prompt_language)
         data = {
             "text": text,
             "text_language": "zh",
@@ -83,4 +83,4 @@ class SoVITS:
 
 if __name__ == "__main__":
     tts = SoVITS()
-    tts.speak("你好啊主人,我是白子。", emotion="愉悦")
+    tts.speak("桃花怒放千万朵，色彩鲜艳红似火。这位姑娘嫁过门，夫妻美满又和顺。", emotion="愉悦")
