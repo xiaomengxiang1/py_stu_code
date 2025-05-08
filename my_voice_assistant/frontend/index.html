@@ -29,21 +29,23 @@
 
     canvas {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
-      pointer-events: none;  /* ⭐️ 允许点击穿透到下方窗口 */
+      pointer-events: auto;
       z-index: 9999;
     }
   </style>
+
+  <!-- QWebChannel 脚本用于与 PyQt 通信 -->
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
 </head>
 <body>
   <!-- PixiJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.8/browser/pixi.min.js"></script>
-  <!-- Cubism4 核心库 -->
+  <!-- Cubism4 Core -->
   <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
-  <!-- pixi-live2d-display 的 Cubism4 构建 -->
+  <!-- pixi-live2d-display (Cubism 4) -->
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js"></script>
 
   <canvas id="canvas"></canvas>
@@ -55,61 +57,110 @@
       view: document.getElementById('canvas'),
       width: window.innerWidth,
       height: window.innerHeight,
-      transparent: true
+      transparent: true,
+      autoStart: true
     });
 
     window.addEventListener('resize', () => {
       app.renderer.resize(window.innerWidth, window.innerHeight);
     });
 
+    let model = null;
+    let dragging = false;
+    let dragOffset = { x: 0, y: 0 };
+    let bridge = null;
+    let mouseOverModel = false;
+
+    // 初始化 WebChannel 通信
+    new QWebChannel(qt.webChannelTransport, channel => {
+      bridge = channel.objects.bridge;
+      console.log("WebChannel 连接成功");
+    });
+
+    function getModelBounds() {
+      if (!model) return { left: 0, right: 0, top: 0, bottom: 0 };
+      
+      const w = model.width * model.scale.x;
+      const h = model.height * model.scale.y;
+      const left = model.x - w * model.anchor.x;
+      const right = left + w;
+      const top = model.y - h * model.anchor.y;
+      const bottom = top + h;
+      return { left, right, top, bottom };
+    }
+
+    function isPointInModel(x, y) {
+      const bounds = getModelBounds();
+      return (x >= bounds.left && x <= bounds.right && 
+              y >= bounds.top && y <= bounds.bottom);
+    }
+
+    // 检测鼠标是否在模型上
+    document.addEventListener('pointermove', e => {
+      const wasOverModel = mouseOverModel;
+      mouseOverModel = isPointInModel(e.clientX, e.clientY);
+      
+      // 状态改变时通知PyQt
+      if (wasOverModel !== mouseOverModel && bridge) {
+        bridge.setMouseTransparent(!mouseOverModel);
+      }
+    });
+
+    // 加载 Live2D 模型
     Live2DModel.from('model/whitecatfree_vts/sdwhite cat free.model3.json')
-      .then(model => {
-        model.anchor.set(0.5, 1.0);
+      .then(live2dModel => {
+        model = live2dModel;
+        model.anchor.set(0.5, 0.5);
         model.scale.set(0.25);
         model.x = window.innerWidth / 2;
-        model.y = window.innerHeight;
+        model.y = window.innerHeight / 2;
         app.stage.addChild(model);
 
-        // 拖动逻辑（全局监听 + 命中测试）
-        let dragging = false;
-        let dragOffset = { x: 0, y: 0 };
-
-        function getModelBounds() {
-          const w = model.width * model.scale.x;
-          const h = model.height * model.scale.y;
-          const left = model.x - w * model.anchor.x;
-          const right = left + w;
-          const top = model.y - h * model.anchor.y;
-          const bottom = top + h;
-          return { left, right, top, bottom };
-        }
-
-        window.addEventListener('pointerdown', e => {
-          const { left, right, top, bottom } = getModelBounds();
-          if (e.clientX >= left && e.clientX <= right &&
-              e.clientY >= top && e.clientY <= bottom) {
-            dragging = true;
-            dragOffset.x = e.clientX - model.x;
-            dragOffset.y = e.clientY - model.y;
-            e.preventDefault();  // ⭐️ 阻止点击继续冒泡（避免误触桌面）
-          }
-        });
-
-        window.addEventListener('pointermove', e => {
-          if (dragging) {
-            model.x = e.clientX - dragOffset.x;
-            model.y = e.clientY - dragOffset.y;
-            e.preventDefault();
-          }
-        });
-
-        window.addEventListener('pointerup', () => {
-          dragging = false;
-        });
+        // 添加互动性
+        model.on('pointerdown', onDragStart);
+        model.interactive = true;
+        model.buttonMode = true;
 
         console.log('模型加载完成');
       })
       .catch(err => console.error('模型加载失败:', err));
+
+    // 拖动处理函数
+    function onDragStart(event) {
+      if (bridge) bridge.setMouseTransparent(false); // 开启拖动，关闭穿透
+      dragging = true;
+      dragOffset.x = event.data.global.x - model.x;
+      dragOffset.y = event.data.global.y - model.y;
+      
+      // 绑定移动和释放事件
+      document.addEventListener('pointermove', onDragMove);
+      document.addEventListener('pointerup', onDragEnd);
+      event.stopPropagation();
+    }
+
+    function onDragMove(event) {
+      if (!dragging) return;
+      model.x = event.clientX - dragOffset.x;
+      model.y = event.clientY - dragOffset.y;
+      event.preventDefault();
+    }
+
+    function onDragEnd() {
+      dragging = false;
+      if (bridge && !mouseOverModel) bridge.setMouseTransparent(true); // 恢复穿透
+      
+      // 移除事件监听
+      document.removeEventListener('pointermove', onDragMove);
+      document.removeEventListener('pointerup', onDragEnd);
+    }
+
+    // 添加双击事件
+    document.addEventListener('dblclick', e => {
+      if (isPointInModel(e.clientX, e.clientY)) {
+        console.log("模型被双击了!");
+        // 这里可以添加双击触发的动作
+      }
+    });
   </script>
 </body>
 </html>

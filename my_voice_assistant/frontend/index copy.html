@@ -19,61 +19,104 @@
   <title>Live2D Desktop Pet</title>
   <style>
     html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      background: transparent; overflow: hidden;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: transparent;
+      width: 100%;
+      height: 100%;
     }
+
     canvas {
-      position: absolute; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: auto;
+      z-index: 9999;
     }
   </style>
+
+  <!-- QWebChannel 脚本用于与 PyQt 通信 -->
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
 </head>
 <body>
   <!-- PixiJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.8/browser/pixi.min.js"></script>
-  <!-- Cubism4 核心库 -->
+  <!-- Cubism4 Core -->
   <script src="https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js"></script>
-  <!-- pixi-live2d-display 的 Cubism4 构建 -->
+  <!-- pixi-live2d-display (Cubism 4) -->
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js"></script>
 
+  <canvas id="canvas"></canvas>
+
   <script>
-    console.log('PIXI.live2d:', PIXI.live2d);
     const { Live2DModel } = PIXI.live2d;
 
-    const app = new PIXI.Application({ transparent: true, width: 512, height: 768 });
-    document.body.appendChild(app.view);
+    const app = new PIXI.Application({
+      view: document.getElementById('canvas'),
+      width: window.innerWidth,
+      height: window.innerHeight,
+      transparent: true
+    });
 
+    window.addEventListener('resize', () => {
+      app.renderer.resize(window.innerWidth, window.innerHeight);
+    });
+
+    let model = null;
+    let dragging = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    // 初始化 WebChannel 通信
+    new QWebChannel(qt.webChannelTransport, channel => {
+      window.bridge = channel.objects.bridge;
+    });
+
+    function getModelBounds() {
+      const w = model.width * model.scale.x;
+      const h = model.height * model.scale.y;
+      const left = model.x - w * model.anchor.x;
+      const right = left + w;
+      const top = model.y - h * model.anchor.y;
+      const bottom = top + h;
+      return { left, right, top, bottom };
+    }
+
+    // 加载 Live2D 模型
     Live2DModel.from('model/whitecatfree_vts/sdwhite cat free.model3.json')
-      .then(model => {
+      .then(live2dModel => {
+        model = live2dModel;
         model.anchor.set(0.5, 1.0);
-        model.scale.set(0.2);
-        model.x = app.screen.width / 2;
-        model.y = app.screen.height;
+        model.scale.set(0.25);
+        model.x = window.innerWidth / 2;
+        model.y = window.innerHeight;
         app.stage.addChild(model);
 
-        // 拖拽实现（兼容官方插件）
-        let dragging = false;
-        let offset = { x: 0, y: 0 };
-
-        model.interactive = true;
-
-        model.on('pointerdown', e => {
-          dragging = true;
-          const pos = e.data.getLocalPosition(model.parent);
-          offset.x = model.x - pos.x;
-          offset.y = model.y - pos.y;
-        });
-
-        model.on('pointermove', e => {
-          if (dragging) {
-            const pos = e.data.getLocalPosition(model.parent);
-            model.x = pos.x + offset.x;
-            model.y = pos.y + offset.y;
+        // 拖动逻辑（全局捕获 + 与 PyQt 通信）
+        window.addEventListener('pointerdown', e => {
+          const { left, right, top, bottom } = getModelBounds();
+          if (e.clientX >= left && e.clientX <= right &&
+              e.clientY >= top && e.clientY <= bottom) {
+            if (window.bridge) window.bridge.setMouseTransparent(false); // 开启拖动，关闭穿透
+            dragging = true;
+            dragOffset.x = e.clientX - model.x;
+            dragOffset.y = e.clientY - model.y;
+            e.preventDefault();
           }
         });
 
-        model.on('pointerup', () => { dragging = false; });
-        model.on('pointerupoutside', () => { dragging = false; });
+        window.addEventListener('pointermove', e => {
+          if (!dragging) return;
+          model.x = e.clientX - dragOffset.x;
+          model.y = e.clientY - dragOffset.y;
+          e.preventDefault();
+        });
+
+        window.addEventListener('pointerup', () => {
+          dragging = false;
+          if (window.bridge) window.bridge.setMouseTransparent(true); // 拖完恢复穿透
+        });
 
         console.log('模型加载完成');
       })
@@ -81,4 +124,7 @@
   </script>
 </body>
 </html>
+
+
+
 
