@@ -24,7 +24,7 @@ class TransparentWebView(QWebEngineView):
         self.installEventFilter(parent)
 
 class DesktopPet(QMainWindow):
-    def __init__(self, html_path):
+    def __init__(self):
         super().__init__()
         # 窗口无边框、透明且置顶
         self.setWindowFlags(
@@ -67,9 +67,7 @@ class DesktopPet(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # 前端页面路径
-    html_file = "E:/vscode_project/py_stu_code/my_voice_assistant/frontend/index.html"
-    pet = DesktopPet(html_file)
+    pet = DesktopPet()
     pet.show()
     sys.exit(app.exec_())
 

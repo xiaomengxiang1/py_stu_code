@@ -8,6 +8,9 @@
 
 # python -m http.server 8000 -->
 
+<!-- 访问 -->
+<!-- http://localhost:8000/index.html -->
+
 
 <!DOCTYPE html>
 <html>
@@ -40,7 +43,7 @@
     const app = new PIXI.Application({ transparent: true, width: 512, height: 768 });
     document.body.appendChild(app.view);
 
-    Live2DModel.from('model/hiyori_vts/hiyori.model3.json')
+    Live2DModel.from('model/whitecatfree_vts/sdwhite cat free.model3.json')
       .then(model => {
         model.anchor.set(0.5, 1.0);
         model.scale.set(0.2);
