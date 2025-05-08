@@ -1,15 +1,11 @@
 
-
-
-
 # python my_voice_assistant\desktop_pet.py启动
 
 
 import sys, os
 from PyQt5.QtCore import Qt, QUrl, QObject, QEvent
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtWebEngineWidgets import QWebEngineSettings
+from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
 
 class TransparentWebView(QWebEngineView):
     """
@@ -42,9 +38,10 @@ class DesktopPet(QMainWindow):
         self.view.load(QUrl("http://localhost:8000/index.html"))
         self.setCentralWidget(self.view)
 
-        # 设置尺寸与初始位置
-        self.resize(512, 768)
-        self.move(100, 100)
+        # 设置窗口为全屏大小以支持模型拖动到屏幕边缘
+        screen = QApplication.primaryScreen()
+        geometry = screen.geometry()
+        self.setGeometry(geometry)
 
         # 拖动偏移
         self._drag_pos = None
@@ -70,4 +67,5 @@ if __name__ == "__main__":
     pet = DesktopPet()
     pet.show()
     sys.exit(app.exec_())
+
 

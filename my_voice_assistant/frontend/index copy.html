@@ -19,22 +19,12 @@
   <title>Live2D Desktop Pet</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: transparent;
-      width: 100%;
-      height: 100%;
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: transparent; overflow: hidden;
     }
-
     canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: auto;
-      z-index: 9999;
+      position: absolute; top: 0; left: 0;
     }
   </style>
 </head>
@@ -46,38 +36,27 @@
   <!-- pixi-live2d-display 的 Cubism4 构建 -->
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display/dist/cubism4.min.js"></script>
 
-  <canvas id="canvas"></canvas>
-
   <script>
+    console.log('PIXI.live2d:', PIXI.live2d);
     const { Live2DModel } = PIXI.live2d;
 
-    // 初始化 Pixi 应用为全屏
-    const app = new PIXI.Application({
-      view: document.getElementById('canvas'),
-      width: window.innerWidth,
-      height: window.innerHeight,
-      transparent: true
-    });
+    const app = new PIXI.Application({ transparent: true, width: 512, height: 768 });
+    document.body.appendChild(app.view);
 
-    // 监听窗口缩放，自动适应大小
-    window.addEventListener('resize', () => {
-      app.renderer.resize(window.innerWidth, window.innerHeight);
-    });
-
-    // 加载模型
     Live2DModel.from('model/whitecatfree_vts/sdwhite cat free.model3.json')
       .then(model => {
         model.anchor.set(0.5, 1.0);
         model.scale.set(0.2);
-        model.x = window.innerWidth / 2;
-        model.y = window.innerHeight;
+        model.x = app.screen.width / 2;
+        model.y = app.screen.height;
         app.stage.addChild(model);
 
-        // 拖拽
+        // 拖拽实现（兼容官方插件）
         let dragging = false;
         let offset = { x: 0, y: 0 };
 
         model.interactive = true;
+
         model.on('pointerdown', e => {
           dragging = true;
           const pos = e.data.getLocalPosition(model.parent);
@@ -93,8 +72,8 @@
           }
         });
 
-        model.on('pointerup', () => dragging = false);
-        model.on('pointerupoutside', () => dragging = false);
+        model.on('pointerup', () => { dragging = false; });
+        model.on('pointerupoutside', () => { dragging = false; });
 
         console.log('模型加载完成');
       })
@@ -102,5 +81,4 @@
   </script>
 </body>
 </html>
-
 
